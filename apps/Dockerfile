@@ -2,11 +2,13 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
 COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # ── Stage 2: Runtime ──────────────────────────────
 FROM python:3.11-slim
 WORKDIR /app
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy only installed packages from builder (smaller image)
 COPY --from=builder /install /usr/local
