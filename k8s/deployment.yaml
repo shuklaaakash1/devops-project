@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-app
+  namespace: default
+  labels:
+    app: devops-app
+    version: "2.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0        # zero-downtime rolling update
+  template:
+    metadata:
+      labels:
+        app: devops-app
+      annotations:
+        prometheus.io/scrape: "true"   # Prometheus scraping annotation
+        prometheus.io/port: "8000"
+    spec:
+      # Anti-affinity: don't put both replicas on same node
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: devops-app
+              topologyKey: kubernetes.io/hostname
+
+      containers:
+      - name: devops-app
+        image: ghcr.io/YOUR_USERNAME/devops-app:latest
+        ports:
+        - containerPort: 8000
+
+        # Environment from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: app-config
+
+        # Resource requests and limits
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+
+        # Startup probe: give app 30s to start
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          failureThreshold: 6
+          periodSeconds: 5
+
+        # Liveness: restart if app hangs
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+
+        # Readiness: stop traffic if not ready
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 2

@@ -1,0 +1,29 @@
+# devops-showcase
+
+End-to-end DevOps project demonstrating production-grade practices.
+
+## Stack
+- **App**: Python FastAPI REST API
+- **Container**: Docker multi-stage build
+- **Kubernetes**: Deployment with health probes, HPA, ConfigMap, 
+                  anti-affinity, resource limits
+- **IaC**: Terraform with reusable modules (kubernetes provider)
+- **CI/CD**: GitHub Actions — test → scan → build → deploy
+- **Security**: Trivy container scan as blocking CI gate
+- **Registry**: GitHub Container Registry (GHCR)
+
+## Pipeline Stages
+1. Run pytest unit tests
+2. Build Docker image
+3. Trivy scan — blocks on HIGH/CRITICAL CVEs
+4. Push to GHCR (main branch only)
+5. Terraform apply — deploy to Kubernetes
+6. Smoke test — verify /health endpoint
+
+## K8s Concepts Covered
+- Rolling update strategy (zero downtime)
+- Liveness + readiness + startup probes
+- HPA (scale 2→5 pods on CPU)
+- Pod anti-affinity (spread across nodes)
+- ConfigMap for environment config
+- Resource requests and limits
