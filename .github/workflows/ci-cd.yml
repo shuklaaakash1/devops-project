@@ -40,7 +40,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
-          exit-code: "1"                 # blocks pipeline on HIGH/CRITICAL
+          exit-code: "1"                 # blocks pipeline on fixable HIGH/CRITICAL
+          ignore-unfixed: true            # do not fail for OS CVEs with no available patch
           severity: "HIGH,CRITICAL"
           format: "table"
 
